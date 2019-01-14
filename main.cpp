@@ -142,6 +142,11 @@ process_file(const char *path) {
 	de_key_len = aes128_ecb_decrypt(aes_core_key, key_data, key_len, de_key_data);
 
 	fread(&ulen, sizeof(ulen), 1, f);
+	if (ulen == 0)
+	{
+		printf("err: ulen == 0, %s", path);
+		return 3;
+	}
 
 	unsigned char modifyData[ulen];
 	fread(modifyData, ulen, 1, f);
@@ -205,6 +210,27 @@ process_file(const char *path) {
 	char filter_music_filename[1024];
 	memset(filter_music_filename, 0, 1024);
 
+#if 1
+	char ext[4];
+	char* pos = strrchr((char*)path, '.');
+	if (pos)
+	{
+		memcpy(ext, pos, 4);
+		const char* ncmExt = ".ncm";
+		if (strcmp(pos, ncmExt) != 0)
+		{
+			printf("error: posfix of the music is not ncm.");
+			return 3;
+		}
+	}
+	else
+	{
+		printf("error: posfix of the name of music input is empty.");
+		return 3;
+	}
+	memcpy(filter_music_filename, path, (pos - path) / sizeof(char));
+	n = sprintf(filter_music_filename, "%s.%s", filter_music_filename, format);
+#else
 	int t;
 	int j = 0;
 	char a;
@@ -249,6 +275,7 @@ process_file(const char *path) {
 			break;
 		}
 	}
+#endif
 
 	// printf("\n     Album: %s\n", album);
 	// printf("    Artist: %s\n", artist);
@@ -335,7 +362,7 @@ process_file(const char *path) {
 	tag->setTitle(TagLib::String(music_name, TagLib::String::UTF8));
 	tag->setArtist(TagLib::String(artist, TagLib::String::UTF8));
 	tag->setAlbum(TagLib::String(album, TagLib::String::UTF8));
-	tag->setComment(TagLib::String("Create by netease copyright protected dump tool. author 5L", TagLib::String::UTF8));
+	// tag->setComment(TagLib::String("Create by netease copyright protected dump tool. author 5L", TagLib::String::UTF8));
 
 	audioFile->save();
 
